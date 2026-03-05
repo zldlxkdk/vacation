@@ -1,0 +1,307 @@
+import React, { useState } from 'react';
+import { Clock, MapPin, Info, Utensils, Bed, Car, Camera, Calendar, Sun, Moon, Coffee, Anchor, Heart } from 'lucide-react';
+
+// 여행 일정 데이터 (CSV 파일 내용 및 추천 일정 반영)
+const tripData = [
+  {
+    day: 1,
+    date: "3/28 (토)",
+    title: "여수로 출발 & 풀빌라 체크인",
+    events: [
+      {
+        time: "09:00 - 13:30",
+        title: "이천 출발 ➔ 여수 이동",
+        place: "[점심] 휴게소 자율 식사",
+        tip: "주말 정체 감안하여 휴게소에서 점심 해결 및 이동 중 낮잠 유도",
+        type: "travel",
+        icon: Car
+      },
+      {
+        time: "13:30 - 15:00",
+        title: "오동도 산책 (동백열차)",
+        place: "여수 오동도",
+        tip: "방파제 길을 따라 동백열차 탑승 (5세 아이 흥미 유발), 유모차 산책하기 좋은 평탄한 코스",
+        type: "activity",
+        icon: Camera
+      },
+      {
+        time: "15:00 - 16:00",
+        title: "이순신광장 & 수산시장",
+        place: "[저녁 준비] 활어회 및 간식 포장",
+        tip: "바다김밥, 딸기모찌 등 유명 간식과 어른용 회 포장 (수산시장)",
+        type: "food",
+        icon: Utensils
+      },
+      {
+        time: "16:00 - 18:30",
+        title: "숙소 체크인 및 1차 물놀이",
+        place: "[숙소] 여수 블루망고 풀빌라 (or 하이클래스 153)",
+        tip: "저상형 침대 및 실내 온수풀 완비 객실. 짐 푸는 동안 5세 아이는 바로 물놀이 시작!",
+        type: "accommodation",
+        icon: Bed
+      },
+      {
+        time: "18:30 이후",
+        title: "저녁 식사 및 휴식",
+        place: "펜션 내 식사",
+        tip: "포장해 온 음식과 간식으로 편안하게 저녁 식사 후 이른 육아 퇴근",
+        type: "food",
+        icon: Moon
+      }
+    ]
+  },
+  {
+    day: 2,
+    date: "3/29 (일)",
+    title: "여수 핫플 탐방 & 2차 물놀이",
+    events: [
+      {
+        time: "09:30 - 11:30",
+        title: "여수 해상케이블카",
+        place: "자산탑승장 출발",
+        tip: "펜션 내 아침(밀키트) 해결 후 출발. 자산탑승장에서 유모차 채로 크리스탈 캐빈 탑승. 오전 일찍 방문해 대기 시간 최소화",
+        type: "activity",
+        icon: Anchor
+      },
+      {
+        time: "11:30 - 13:00",
+        title: "점심 식사",
+        place: "[식당] 정다운식당 또는 명동게장",
+        tip: "어른은 게장/갈치조림, 아이는 부드러운 생선구이 정식으로 식사 해결",
+        type: "food",
+        icon: Utensils
+      },
+      {
+        time: "13:00 - 15:30",
+        title: "아쿠아플라넷 여수",
+        place: "여수엑스포역 인근",
+        tip: "5세 아이가 좋아하는 해양 생물 관람. 실내라 10개월 아기 유모차 이동 편리 (낮잠 시간 활용)",
+        type: "activity",
+        icon: Camera
+      },
+      {
+        time: "15:30 - 16:30",
+        title: "오션뷰 카페 휴식",
+        place: "모이핀 등 대형 카페",
+        tip: "아이들 간식 시간 및 어른들 당 충전 타임. 유모차 반입이 수월한 넓은 대형 카페 추천",
+        type: "cafe",
+        icon: Coffee
+      },
+      {
+        time: "16:30 - 18:30",
+        title: "숙소 복귀 및 2차 물놀이",
+        place: "[숙소] 여수 블루망고 풀빌라",
+        tip: "따뜻한 온수풀에서 2차 물놀이로 아이들 에너지 소모 유도 (빠른 육퇴를 위한 빌드업)",
+        type: "accommodation",
+        icon: Sun
+      },
+      {
+        time: "18:30 이후",
+        title: "저녁 식사 (바비큐) 및 휴식",
+        place: "펜션 개별 테라스",
+        tip: "아이들 안전하게 실내에 두고 테라스에서 고기 굽기. 식사 후 여유로운 밤 시간",
+        type: "food",
+        icon: Utensils
+      }
+    ]
+  },
+  {
+    day: 3,
+    date: "3/30 (월)",
+    title: "여유로운 산책 & 풀빌라 뽕뽑기",
+    events: [
+      {
+        time: "09:30 - 11:30",
+        title: "예술랜드 조각공원",
+        place: "여수 예술랜드",
+        tip: "펜션 조식 후 이동. 오션뷰 조각공원 산책 및 트릭아트에서 5세 아이와 재미있는 가족 사진 촬영",
+        type: "activity",
+        icon: Camera
+      },
+      {
+        time: "11:30 - 13:00",
+        title: "점심 식사",
+        place: "로컬 맛집 (전복죽/칼국수 등)",
+        tip: "아이들도 부담 없이 먹을 수 있는 자극적이지 않은 맑은 국물이나 죽 메뉴 선택",
+        type: "food",
+        icon: Utensils
+      },
+      {
+        time: "13:00 - 15:00",
+        title: "해안도로 드라이브 및 낮잠",
+        place: "돌산 해안도로",
+        tip: "아이들 낮잠 시간에 맞춰 돌산 해안도로를 드라이브하며 어른들도 차 안에서 조용히 휴식",
+        type: "travel",
+        icon: Car
+      },
+      {
+        time: "15:00 - 17:30",
+        title: "숙소 휴식 및 3차 물놀이",
+        place: "[숙소] 여수 블루망고 풀빌라",
+        tip: "풀빌라 마지막 날! 아쉬움이 남지 않도록 여유롭게 마지막 온수풀 물놀이 즐기기",
+        type: "accommodation",
+        icon: Heart
+      },
+      {
+        time: "17:30 이후",
+        title: "저녁 식사 및 짐 정리",
+        place: "숙소 내 배달음식",
+        tip: "마지막 날 저녁은 간편하게 치킨/피자 등 배달음식으로 해결하고 여유롭게 다음 날 짐 정리",
+        type: "food",
+        icon: Moon
+      }
+    ]
+  },
+  {
+    day: 4,
+    date: "3/31 (화)",
+    title: "아쉬운 체크아웃 & 집으로",
+    events: [
+      {
+        time: "09:00 - 11:00",
+        title: "기상 및 체크아웃",
+        place: "[숙소] 여수 블루망고 풀빌라",
+        tip: "여유롭게 아침 식사 후 잊은 물건 없이 꼼꼼히 짐 챙겨 11시 체크아웃",
+        type: "accommodation",
+        icon: Bed
+      },
+      {
+        time: "11:00 - 12:30",
+        title: "기념품 쇼핑 & 이른 점심",
+        place: "이순신광장 주변",
+        tip: "여수 갓김치, 추가 간식(딸기모찌 등) 구매 후 이순신수제버거 등으로 가벼운 점심",
+        type: "activity",
+        icon: Utensils
+      },
+      {
+        time: "12:30 이후",
+        title: "여수 출발 ➔ 이천 도착",
+        place: "이동 및 휴게소",
+        tip: "아이들 점심 식사 후 낮잠 시간에 맞춰 장거리 이동 시작. 중간중간 휴게소 들르며 안전 운전!",
+        type: "travel",
+        icon: Car
+      }
+    ]
+  }
+];
+
+// 타입별 색상 매핑
+const typeColors = {
+  travel: "bg-purple-100 text-purple-700 border-purple-200",
+  activity: "bg-green-100 text-green-700 border-green-200",
+  food: "bg-orange-100 text-orange-700 border-orange-200",
+  accommodation: "bg-blue-100 text-blue-700 border-blue-200",
+  cafe: "bg-amber-100 text-amber-700 border-amber-200",
+};
+
+export default function App() {
+  const [activeDay, setActiveDay] = useState(1);
+  const currentDayData = tripData.find((d) => d.day === activeDay);
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+      {/* Header Section */}
+      <header className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white pt-12 pb-8 px-6 shadow-md rounded-b-3xl">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center space-x-2 mb-2 bg-white/20 w-fit px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+            <Calendar size={16} />
+            <span>3박 4일 아이 동반 여행</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">여수 가족 여행 일정</h1>
+          <p className="text-blue-50 text-lg opacity-90 flex items-center">
+            <Heart size={18} className="mr-2 fill-current" />
+            5세, 10개월 아이와 함께하는 완벽한 풀빌라 휴가
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 mt-8">
+        {/* Day Navigation Tabs */}
+        <div className="flex space-x-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+          {tripData.map((day) => (
+            <button
+              key={day.day}
+              onClick={() => setActiveDay(day.day)}
+              className={`flex-shrink-0 px-5 py-3 rounded-2xl font-semibold transition-all duration-200 shadow-sm
+                ${
+                  activeDay === day.day
+                    ? "bg-blue-600 text-white shadow-blue-200"
+                    : "bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600"
+                }`}
+            >
+              <div className="text-xs font-medium opacity-80 mb-1">{day.date}</div>
+              <div className="text-lg">{day.day}일 차</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected Day Title */}
+        <div className="mb-8 pl-2">
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center">
+            <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg mr-3 text-lg">
+              Day {currentDayData.day}
+            </span>
+            {currentDayData.title}
+          </h2>
+        </div>
+
+        {/* Timeline */}
+        <div className="relative border-l-2 border-blue-100 ml-4 md:ml-6 space-y-8">
+          {currentDayData.events.map((event, index) => {
+            const Icon = event.icon;
+            return (
+              <div key={index} className="relative pl-8 md:pl-10">
+                {/* Timeline Dot */}
+                <div className={`absolute -left-[17px] top-1 h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${typeColors[event.type].split(' ')[0]}`}>
+                  <Icon size={14} className={typeColors[event.type].split(' ')[1]} />
+                </div>
+
+                {/* Event Card */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center space-x-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-md text-sm w-fit">
+                      <Clock size={16} />
+                      <span>{event.time}</span>
+                    </div>
+                    
+                    {/* Badge */}
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${typeColors[event.type]}`}>
+                      {event.type === 'travel' && '이동'}
+                      {event.type === 'activity' && '관광/체험'}
+                      {event.type === 'food' && '식사/간식'}
+                      {event.type === 'accommodation' && '숙소/휴식'}
+                      {event.type === 'cafe' && '카페'}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-slate-800 mt-3 mb-2">{event.title}</h3>
+                  
+                  <div className="flex items-center text-slate-500 mb-4 font-medium">
+                    <MapPin size={16} className="mr-1.5 shrink-0" />
+                    <span>{event.place}</span>
+                  </div>
+
+                  {/* Honey Tip Section */}
+                  <div className="bg-amber-50 rounded-xl p-4 border border-amber-100/50 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+                    <div className="flex gap-3">
+                      <div className="mt-0.5 text-amber-500 shrink-0">
+                        <Info size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-amber-800 mb-1">육아 동반 꿀팁</p>
+                        <p className="text-sm text-amber-900 leading-relaxed break-keep">
+                          {event.tip}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}
