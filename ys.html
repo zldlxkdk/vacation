@@ -41,16 +41,24 @@
 
   <!-- Header Section -->
   <header class="bg-gradient-to-r from-blue-500 to-cyan-400 text-white pt-12 pb-8 px-6 shadow-md rounded-b-3xl">
-    <div class="max-w-3xl mx-auto">
-      <div class="flex items-center space-x-2 mb-2 bg-white/20 w-fit px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
-        <i data-lucide="calendar" class="w-4 h-4"></i>
-        <span>3박 4일 아이 동반 여행</span>
+    <div class="max-w-3xl mx-auto flex justify-between items-end gap-4">
+      <div class="flex-1">
+        <div class="flex items-center space-x-2 mb-2 bg-white/20 w-fit px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span>3박 4일 아이 동반 여행</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight break-keep">여수 가족 여행 일정</h1>
+        <p class="text-blue-50 text-lg opacity-90 flex items-center font-medium">
+          <i data-lucide="heart" class="w-5 h-5 mr-2 fill-current"></i>
+          오이가족 여수 여행계획
+        </p>
       </div>
-      <h1 class="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">여수 가족 여행 일정</h1>
-      <p class="text-blue-50 text-lg opacity-90 flex items-center">
-        <i data-lucide="heart" class="w-5 h-5 mr-2 fill-current"></i>
-        5세, 10개월 아이와 함께하는 완벽한 풀빌라 휴가
-      </p>
+      
+      <!-- 상단 비용 상세 전용 버튼 -->
+      <button id="top-cost-btn" onclick="setActiveDay('cost')" class="shrink-0 mb-1 flex flex-col items-center justify-center py-2.5 px-4 rounded-2xl transition-all backdrop-blur-sm border">
+        <i data-lucide="receipt" class="w-6 h-6 mb-1"></i>
+        <span class="text-xs font-bold tracking-wide">비용상세</span>
+      </button>
     </div>
   </header>
 
@@ -278,7 +286,7 @@
 
     // 비용 산정 데이터 (상세 항목 지원)
     const costData = {
-      total: 1445640, // 764,240(숙소) + 181,400(관광) + 350,000(식비) + 150,000(교통)
+      total: 1445640,
       categories: [
         { 
           name: "숙박비", amount: 764240, details: "하이클래스153 3박 예약 및 현장 추가", icon: "bed", color: "text-blue-600", bg: "bg-blue-50",
@@ -325,15 +333,27 @@
     let activeDay = 1;
 
     function renderApp() {
+      renderHeaderButton();
       renderTabs();
       renderContent();
       renderNavButtons();
       lucide.createIcons();
     }
 
+    // 상단 '비용상세' 버튼 활성화 상태 업데이트
+    function renderHeaderButton() {
+      const topBtn = document.getElementById('top-cost-btn');
+      if (activeDay === 'cost') {
+        topBtn.className = "shrink-0 mb-1 flex flex-col items-center justify-center py-2 px-3 md:px-4 rounded-2xl transition-all shadow-md bg-white text-emerald-600 border-2 border-emerald-400";
+      } else {
+        topBtn.className = "shrink-0 mb-1 flex flex-col items-center justify-center py-2 px-3 md:px-4 rounded-2xl transition-all bg-white/20 text-white hover:bg-white/30 border border-white/20 backdrop-blur-sm";
+      }
+    }
+
+    // 일정 날짜 탭 렌더링 (비용 버튼 제거됨)
     function renderTabs() {
       const container = document.getElementById('tabs-container');
-      let tabsHtml = tripData.map(day => `
+      container.innerHTML = tripData.map(day => `
         <button
           onclick="setActiveDay(${day.day})"
           class="flex-shrink-0 px-5 py-2 rounded-xl font-semibold transition-all duration-200 ${
@@ -346,22 +366,6 @@
           <div class="text-sm">Day ${day.day}</div>
         </button>
       `).join('');
-
-      tabsHtml += `
-        <button
-          onclick="setActiveDay('cost')"
-          class="flex-shrink-0 px-5 py-2 rounded-xl font-semibold transition-all duration-200 ${
-            activeDay === 'cost'
-              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200'
-              : 'bg-white text-slate-500 hover:bg-emerald-50'
-          }"
-        >
-          <div class="text-[10px] font-medium opacity-80 uppercase leading-none mb-0.5">예산</div>
-          <div class="text-sm">비용 정리</div>
-        </button>
-      `;
-
-      container.innerHTML = tabsHtml;
     }
 
     window.setActiveDay = function(day) {
@@ -375,6 +379,7 @@
       const contentContainer = document.getElementById('content-container');
 
       if (activeDay === 'cost') {
+        // 비용 상세 페이지
         titleContainer.innerHTML = `
           <h2 class="text-2xl font-bold text-slate-800 flex items-center">
             <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-lg mr-3 text-lg">
@@ -398,15 +403,14 @@
             <div class="grid gap-3 md:gap-4">
         `;
 
-        // 카테고리별 요약
         costHtml += costData.categories.map(cat => `
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
              <div class="h-14 w-14 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center shrink-0">
                <i data-lucide="${cat.icon}" class="w-6 h-6"></i>
              </div>
-             <div class="flex-1">
-               <div class="text-base font-bold text-slate-800">${cat.name}</div>
-               <div class="text-sm text-slate-500 mt-0.5 truncate max-w-[180px] md:max-w-full">${cat.details}</div>
+             <div class="flex-1 min-w-0">
+               <div class="text-base font-bold text-slate-800 truncate">${cat.name}</div>
+               <div class="text-sm text-slate-500 mt-0.5 truncate">${cat.details}</div>
              </div>
              <div class="text-lg font-extrabold text-slate-800 shrink-0">
                ${cat.amount.toLocaleString()}원
@@ -415,57 +419,63 @@
         `).join('');
         costHtml += `</div></div>`;
 
-        // 2. 항목별 상세 내역 표 (새로 추가된 부분)
+        // 2. 모바일 친화적인 플렉스 기반 상세 내역 디자인 (Table 제거)
         costHtml += `
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-6">
             <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
               <i data-lucide="list-tree" class="w-5 h-5 text-slate-500"></i>
               <h3 class="font-bold text-slate-800 text-lg">상세 비용 내역</h3>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-sm text-slate-600 whitespace-nowrap">
-                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500">
-                  <tr>
-                    <th class="px-5 py-3 font-medium">분류</th>
-                    <th class="px-5 py-3 font-medium">세부 항목</th>
-                    <th class="px-5 py-3 font-medium text-right">금액</th>
-                    <th class="px-5 py-3 font-medium text-center">비고</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
+            <div class="divide-y divide-slate-100">
         `;
 
         costData.categories.forEach(cat => {
-          cat.subItems.forEach((sub, index) => {
+          costHtml += `
+            <div class="p-5">
+              <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-4 text-base">
+                <span class="flex items-center justify-center w-6 h-6 rounded-md ${cat.bg} ${cat.color}">
+                  <i data-lucide="${cat.icon}" class="w-3.5 h-3.5"></i>
+                </span>
+                ${cat.name}
+              </h4>
+              <div class="space-y-4 pl-3.5 border-l-2 border-slate-100 ml-3">
+          `;
+          
+          cat.subItems.forEach(sub => {
             const isCompleted = sub.note.includes("완료") || sub.note.includes("확정");
             const badgeClass = isCompleted 
-              ? "bg-emerald-100 text-emerald-700 font-bold" 
-              : "bg-slate-100 text-slate-600";
+              ? "bg-emerald-50 text-emerald-700 font-bold border border-emerald-200" 
+              : "bg-slate-50 text-slate-600 border border-slate-200";
             
             costHtml += `
-              <tr class="hover:bg-slate-50 transition-colors">
-                ${index === 0 
-                  ? `<td class="px-5 py-4 align-top font-bold ${cat.color} border-r border-slate-100 bg-white" rowspan="${cat.subItems.length}">${cat.name.replace('비', '')}</td>` 
-                  : ''}
-                <td class="px-5 py-4 text-slate-700">${sub.title}</td>
-                <td class="px-5 py-4 text-right font-semibold text-slate-800">${sub.price.toLocaleString()}원</td>
-                <td class="px-5 py-4 text-center">
-                  <span class="text-[11px] px-2 py-1 rounded-md ${badgeClass}">${sub.note}</span>
-                </td>
-              </tr>
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1 text-slate-700 text-[14px] md:text-base font-medium break-keep mt-0.5">
+                    ${sub.title}
+                  </div>
+                  <div class="flex flex-col items-end shrink-0 gap-1.5">
+                    <span class="font-extrabold text-slate-800 text-[15px] md:text-base">${sub.price.toLocaleString()}원</span>
+                    <span class="text-[11px] px-2 py-0.5 rounded flex items-center ${badgeClass}">
+                      ${sub.note}
+                    </span>
+                  </div>
+                </div>
             `;
           });
+          
+          costHtml += `
+              </div>
+            </div>
+          `;
         });
 
         costHtml += `
-                </tbody>
-              </table>
             </div>
           </div>
         `;
 
         contentContainer.innerHTML = costHtml;
       } else {
+        // 일반 일정 타임라인 페이지
         const dayData = tripData.find(d => d.day === activeDay);
         titleContainer.innerHTML = `
           <h2 class="text-2xl font-bold text-slate-800 flex items-center">
@@ -505,7 +515,7 @@
                 <div class="flex items-center justify-between mb-4">
                   <div class="flex items-center text-slate-500 font-medium text-sm">
                     <i data-lucide="map-pin" class="w-4 h-4 mr-1.5 shrink-0"></i>
-                    <span>${event.place}</span>
+                    <span class="truncate max-w-[150px] sm:max-w-none">${event.place}</span>
                   </div>
                   ${mapButtonHtml}
                 </div>
@@ -532,7 +542,7 @@
       const container = document.getElementById('nav-buttons-container');
       if (activeDay === 'cost') {
         container.innerHTML = `
-          <button onclick="setActiveDay(1)" class="w-full py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50">
+          <button onclick="setActiveDay(1)" class="w-full py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-colors">
             1일 차 일정으로 돌아가기
           </button>
         `;
@@ -545,7 +555,7 @@
       let html = '';
       if (!isFirst) {
         html += `
-          <button onclick="setActiveDay(${activeDay - 1})" class="w-full py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-500 text-sm">
+          <button onclick="setActiveDay(${activeDay - 1})" class="w-full py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-500 text-sm hover:bg-slate-50 transition-colors">
             이전 날 일정 보기
           </button>
         `;
@@ -553,14 +563,15 @@
       
       if (!isLast) {
         html += `
-          <button onclick="setActiveDay(${activeDay + 1})" class="w-full py-4 bg-blue-600 rounded-2xl font-extrabold text-white shadow-lg text-lg">
+          <button onclick="setActiveDay(${activeDay + 1})" class="w-full py-4 bg-blue-600 rounded-2xl font-extrabold text-white shadow-lg shadow-blue-200 text-lg hover:bg-blue-700 transition-colors">
             다음 날 (${activeDay + 1}일 차) 일정 보기
           </button>
         `;
       } else {
         html += `
-          <button onclick="setActiveDay('cost')" class="w-full py-4 bg-emerald-600 rounded-2xl font-extrabold text-white shadow-lg text-lg">
+          <button onclick="setActiveDay('cost')" class="w-full py-4 bg-emerald-600 rounded-2xl font-extrabold text-white shadow-lg shadow-emerald-200 text-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
             최종 비용 상세 확인하기
+            <i data-lucide="arrow-right" class="w-5 h-5"></i>
           </button>
         `;
       }
