@@ -149,7 +149,7 @@
             tip: "펜션 내 아침(밀키트) 해결 후 출발. 자산탑승장에서 유모차 채로 크리스탈 캐빈 탑승. 오전 일찍 방문해 대기 시간 최소화",
             type: "activity",
             icon: "anchor",
-            mapQuery: "여수 해상케이블카 자산탑승장"
+            mapQuery: "여수 해상케이블카"
           },
           {
             time: "11:30 - 13:00",
@@ -278,20 +278,22 @@
 
     // 비용 산정 데이터 (상세 항목 지원)
     const costData = {
-      total: 1348940, // 664,240(숙소) + 184,700(관광) + 350,000(식비) + 150,000(교통)
+      total: 1445640, // 764,240(숙소) + 181,400(관광) + 350,000(식비) + 150,000(교통)
       categories: [
         { 
-          name: "숙박비", amount: 664240, details: "하이클래스153 풀빌라 3박 예약", icon: "bed", color: "text-blue-600", bg: "bg-blue-50",
+          name: "숙박비", amount: 764240, details: "하이클래스153 3박 예약 및 현장 추가", icon: "bed", color: "text-blue-600", bg: "bg-blue-50",
           subItems: [
-            { title: "하이클래스153 풀빌라 (3박)", price: 664240, note: "결제 완료" }
+            { title: "하이클래스153 풀빌라 (3박)", price: 664240, note: "결제 완료" },
+            { title: "미온수 1일 이용 (둘째 날)", price: 80000, note: "현장 결제" },
+            { title: "바비큐 그릴 대여 (둘째 날)", price: 20000, note: "현장 결제" }
           ]
         },
         { 
-          name: "관광/체험비", amount: 184700, details: "아쿠아플라넷, 케이블카, 예술랜드", icon: "ticket", color: "text-green-600", bg: "bg-green-50",
+          name: "관광/체험비", amount: 181400, details: "아쿠아플라넷, 케이블카, 예술랜드", icon: "ticket", color: "text-green-600", bg: "bg-green-50",
           subItems: [
             { title: "아쿠아플라넷 여수", price: 80700, note: "결제 완료" },
             { title: "여수 해상케이블카", price: 64000, note: "확정 금액" },
-            { title: "여수 예술랜드", price: 40000, note: "예상" }
+            { title: "여수 예술랜드", price: 36700, note: "확정 금액" }
           ]
         },
         { 
