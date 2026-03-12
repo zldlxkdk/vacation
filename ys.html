@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>여수 가족 여행 일정</title>
   
-  <!-- Tailwind CSS (디자인 프레임워크) -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Lucide Icons (아이콘 라이브러리) -->
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- 웹 폰트 적용 (Pretendard) -->
@@ -17,6 +17,7 @@
   <style>
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+      scroll-behavior: smooth;
     }
     /* 스크롤바 숨기기 */
     .hide-scroll::-webkit-scrollbar { 
@@ -26,9 +27,17 @@
       -ms-overflow-style: none; 
       scrollbar-width: none; 
     }
+    /* 스티키 탭 배경 흐림 효과 */
+    .sticky-tabs {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(248, 250, 252, 0.9);
+      backdrop-filter: blur(8px);
+    }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 pb-12">
+<body class="min-h-screen bg-slate-50 text-slate-800 pb-20">
 
   <!-- Header Section -->
   <header class="bg-gradient-to-r from-blue-500 to-cyan-400 text-white pt-12 pb-8 px-6 shadow-md rounded-b-3xl">
@@ -45,14 +54,18 @@
     </div>
   </header>
 
+  <!-- Sticky Tabs Navigation -->
+  <div class="sticky-tabs border-b border-slate-200">
+    <div class="max-w-3xl mx-auto px-4 py-3">
+      <div id="tabs-container" class="flex space-x-2 overflow-x-auto hide-scroll">
+        <!-- Tabs will be rendered here via JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- Main Content -->
   <main class="max-w-3xl mx-auto px-4 sm:px-6 mt-8">
     
-    <!-- Day Navigation Tabs -->
-    <div id="tabs-container" class="flex space-x-2 overflow-x-auto pb-4 mb-6 hide-scroll">
-      <!-- Tabs will be rendered here via JS -->
-    </div>
-
     <!-- Selected Day Title -->
     <div id="day-title-container" class="mb-8 pl-2">
       <!-- Title will be rendered here via JS -->
@@ -61,6 +74,11 @@
     <!-- Timeline -->
     <div id="timeline-container" class="relative border-l-2 border-blue-100 ml-4 md:ml-6 space-y-8">
       <!-- Events will be rendered here via JS -->
+    </div>
+
+    <!-- Sequential Navigation Buttons (Bottom) -->
+    <div id="nav-buttons-container" class="mt-12 mb-8 flex items-center justify-between gap-4">
+      <!-- Buttons will be rendered here via JS -->
     </div>
 
   </main>
@@ -258,7 +276,6 @@
       }
     ];
 
-    // 타입별 색상 및 라벨 매핑
     const typeConfigs = {
       travel: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200", label: "이동" },
       activity: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200", label: "관광/체험" },
@@ -269,38 +286,38 @@
 
     let activeDay = 1;
 
-    // UI 렌더링 함수
     function renderApp() {
       renderTabs();
       renderTimeline();
+      renderNavButtons();
       lucide.createIcons();
     }
 
-    // 상단 일차(Day) 탭 렌더링
     function renderTabs() {
       const container = document.getElementById('tabs-container');
       container.innerHTML = tripData.map(day => `
         <button
           onclick="setActiveDay(${day.day})"
-          class="flex-shrink-0 px-5 py-3 rounded-2xl font-semibold transition-all duration-200 shadow-sm ${
+          class="flex-shrink-0 px-5 py-2 rounded-xl font-semibold transition-all duration-200 ${
             activeDay === day.day
-              ? 'bg-blue-600 text-white shadow-blue-200'
-              : 'bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+              : 'bg-white text-slate-500 hover:bg-blue-50'
           }"
         >
-          <div class="text-xs font-medium opacity-80 mb-1">${day.date}</div>
-          <div class="text-lg">${day.day}일 차</div>
+          <div class="text-[10px] font-medium opacity-80 uppercase leading-none mb-0.5">${day.date}</div>
+          <div class="text-sm">Day ${day.day}</div>
         </button>
       `).join('');
     }
 
-    // 날짜 변경 이벤트
     window.setActiveDay = function(day) {
+      if (day < 1 || day > tripData.length) return;
       activeDay = day;
       renderApp();
+      // 탭 전환 시 화면 상단으로 부드럽게 이동
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 타임라인 내용 렌더링
     function renderTimeline() {
       const dayData = tripData.find(d => d.day === activeDay);
       const titleContainer = document.getElementById('day-title-container');
@@ -317,9 +334,9 @@
       timelineContainer.innerHTML = dayData.events.map(event => {
         const config = typeConfigs[event.type] || typeConfigs.activity;
         const mapButtonHtml = event.mapQuery ? `
-          <a href="https://map.naver.com/v5/search/${encodeURIComponent(event.mapQuery)}" target="_blank" rel="noopener noreferrer" class="ml-auto flex items-center shrink-0 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded-md hover:bg-emerald-100 hover:text-emerald-700 transition-colors shadow-sm">
+          <a href="https://map.naver.com/v5/search/${encodeURIComponent(event.mapQuery)}" target="_blank" rel="noopener noreferrer" class="ml-auto flex items-center shrink-0 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded-md hover:bg-emerald-100 transition-colors shadow-sm">
             <i data-lucide="map" class="w-3.5 h-3.5 mr-1"></i>
-            네이버 지도
+            지도
           </a>
         ` : '';
 
@@ -328,7 +345,7 @@
             <div class="absolute -left-[17px] top-1 h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${config.bg}">
               <i data-lucide="${event.icon}" class="w-4 h-4 ${config.text}"></i>
             </div>
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
               <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
                 <div class="flex items-center space-x-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-md text-sm w-fit">
                   <i data-lucide="clock" class="w-4 h-4"></i>
@@ -342,7 +359,7 @@
               <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center text-slate-500 font-medium">
                   <i data-lucide="map-pin" class="w-4 h-4 mr-1.5 shrink-0"></i>
-                  <span>${event.place}</span>
+                  <span class="text-sm truncate max-w-[150px] md:max-w-none">${event.place}</span>
                 </div>
                 ${mapButtonHtml}
               </div>
@@ -352,11 +369,9 @@
                   <div class="mt-0.5 text-amber-500 shrink-0">
                     <i data-lucide="info" class="w-[18px] h-[18px]"></i>
                   </div>
-                  <div>
-                    <p class="text-sm font-bold text-amber-800 mb-1">육아 동반 꿀팁</p>
-                    <p class="text-sm text-amber-900 leading-relaxed break-keep">
-                      ${event.tip}
-                    </p>
+                  <div class="text-sm">
+                    <p class="font-bold text-amber-800 mb-1 leading-tight">육아 꿀팁</p>
+                    <p class="text-amber-900 leading-snug break-keep">${event.tip}</p>
                   </div>
                 </div>
               </div>
@@ -364,6 +379,30 @@
           </div>
         `;
       }).join('');
+    }
+
+    // 하단 이동 버튼 렌더링
+    function renderNavButtons() {
+      const container = document.getElementById('nav-buttons-container');
+      const isFirst = activeDay === 1;
+      const isLast = activeDay === tripData.length;
+
+      container.innerHTML = `
+        <button 
+          onclick="setActiveDay(${activeDay - 1})"
+          class="flex-1 flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 transition-colors hover:bg-slate-50 ${isFirst ? 'opacity-0 pointer-events-none' : ''}"
+        >
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+          이전 날
+        </button>
+        <button 
+          onclick="setActiveDay(${activeDay + 1})"
+          class="flex-[2] flex items-center justify-center gap-2 py-4 bg-blue-600 rounded-2xl font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 ${isLast ? 'opacity-0 pointer-events-none' : ''}"
+        >
+          다음 날 일정 보기
+          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        </button>
+      `;
     }
 
     document.addEventListener('DOMContentLoaded', renderApp);
