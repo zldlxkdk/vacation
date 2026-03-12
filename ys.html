@@ -37,7 +37,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 pb-20">
+<body class="min-h-screen bg-slate-50 text-slate-800 pb-24">
 
   <!-- Header Section -->
   <header class="bg-gradient-to-r from-blue-500 to-cyan-400 text-white pt-12 pb-8 px-6 shadow-md rounded-b-3xl">
@@ -55,7 +55,7 @@
   </header>
 
   <!-- Sticky Tabs Navigation -->
-  <div class="sticky-tabs border-b border-slate-200">
+  <div class="sticky-tabs border-b border-slate-200 shadow-sm">
     <div class="max-w-3xl mx-auto px-4 py-3">
       <div id="tabs-container" class="flex space-x-2 overflow-x-auto hide-scroll">
         <!-- Tabs will be rendered here via JS -->
@@ -71,13 +71,13 @@
       <!-- Title will be rendered here via JS -->
     </div>
 
-    <!-- Timeline -->
-    <div id="timeline-container" class="relative border-l-2 border-blue-100 ml-4 md:ml-6 space-y-8">
-      <!-- Events will be rendered here via JS -->
+    <!-- Timeline or Cost Container -->
+    <div id="content-container">
+      <!-- Events or Cost details will be rendered here via JS -->
     </div>
 
     <!-- Sequential Navigation Buttons (Bottom) -->
-    <div id="nav-buttons-container" class="mt-12 mb-8 flex items-center justify-between gap-4">
+    <div id="nav-buttons-container" class="mt-12 flex flex-col w-full gap-3">
       <!-- Buttons will be rendered here via JS -->
     </div>
 
@@ -214,9 +214,9 @@
           },
           {
             time: "13:00 - 15:30",
-            title: "아쿠아플라넷 여수 (월요일 추천)",
+            title: "아쿠아플라넷 여수 (예약완료)",
             place: "여수엑스포역 인근",
-            tip: "주말보다 한산한 평일 오후에 관람. 5세 아이가 좋아하는 해양 생물 관람 및 10개월 아기 낮잠 시간 활용하기 좋습니다.",
+            tip: "성인 2명, 5세 아이 80,700원 예약 완료. 주말보다 한산한 평일 오후에 관람하세요.",
             type: "activity",
             icon: "camera",
             mapQuery: "아쿠아플라넷 여수"
@@ -276,6 +276,17 @@
       }
     ];
 
+    // 비용 산정 데이터 (실제 예약 내역 반영)
+    const costData = {
+      total: 1294940, // 664,240 + 80,700 + 150,000(교통) + 350,000(식비) + 50,000(기타티켓)
+      categories: [
+        { name: "숙박비 (예약완료)", amount: 664240, details: "하이클래스153 풀빌라 3박 예약 완료", icon: "bed", color: "text-blue-600", bg: "bg-blue-50" },
+        { name: "관광/체험비", amount: 130700, details: "아쿠아플라넷(80,700원 결제) + 케이블카 등 예상", icon: "ticket", color: "text-green-600", bg: "bg-green-50" },
+        { name: "식비 및 간식 (예상)", amount: 350000, details: "게장, 횟집 포장, 카페, 배달 음식 등", icon: "utensils", color: "text-orange-600", bg: "bg-orange-50" },
+        { name: "교통비 (예상)", amount: 150000, details: "이천↔여수 왕복 주유비 및 톨게이트", icon: "car", color: "text-purple-600", bg: "bg-purple-50" }
+      ]
+    };
+
     const typeConfigs = {
       travel: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200", label: "이동" },
       activity: { bg: "bg-green-100", text: "text-green-700", border: "border-green-200", label: "관광/체험" },
@@ -288,14 +299,14 @@
 
     function renderApp() {
       renderTabs();
-      renderTimeline();
+      renderContent();
       renderNavButtons();
       lucide.createIcons();
     }
 
     function renderTabs() {
       const container = document.getElementById('tabs-container');
-      container.innerHTML = tripData.map(day => `
+      let tabsHtml = tripData.map(day => `
         <button
           onclick="setActiveDay(${day.day})"
           class="flex-shrink-0 px-5 py-2 rounded-xl font-semibold transition-all duration-200 ${
@@ -308,101 +319,173 @@
           <div class="text-sm">Day ${day.day}</div>
         </button>
       `).join('');
+
+      tabsHtml += `
+        <button
+          onclick="setActiveDay('cost')"
+          class="flex-shrink-0 px-5 py-2 rounded-xl font-semibold transition-all duration-200 ${
+            activeDay === 'cost'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200'
+              : 'bg-white text-slate-500 hover:bg-emerald-50'
+          }"
+        >
+          <div class="text-[10px] font-medium opacity-80 uppercase leading-none mb-0.5">예산</div>
+          <div class="text-sm">비용 정리</div>
+        </button>
+      `;
+
+      container.innerHTML = tabsHtml;
     }
 
     window.setActiveDay = function(day) {
-      if (day < 1 || day > tripData.length) return;
       activeDay = day;
       renderApp();
-      // 탭 전환 시 화면 상단으로 부드럽게 이동
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function renderTimeline() {
-      const dayData = tripData.find(d => d.day === activeDay);
+    function renderContent() {
       const titleContainer = document.getElementById('day-title-container');
-      titleContainer.innerHTML = `
-        <h2 class="text-2xl font-bold text-slate-800 flex items-center">
-          <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg mr-3 text-lg">
-            Day ${dayData.day}
-          </span>
-          ${dayData.title}
-        </h2>
-      `;
+      const contentContainer = document.getElementById('content-container');
 
-      const timelineContainer = document.getElementById('timeline-container');
-      timelineContainer.innerHTML = dayData.events.map(event => {
-        const config = typeConfigs[event.type] || typeConfigs.activity;
-        const mapButtonHtml = event.mapQuery ? `
-          <a href="https://map.naver.com/v5/search/${encodeURIComponent(event.mapQuery)}" target="_blank" rel="noopener noreferrer" class="ml-auto flex items-center shrink-0 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded-md hover:bg-emerald-100 transition-colors shadow-sm">
-            <i data-lucide="map" class="w-3.5 h-3.5 mr-1"></i>
-            지도
-          </a>
-        ` : '';
-
-        return `
-          <div class="relative pl-8 md:pl-10">
-            <div class="absolute -left-[17px] top-1 h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${config.bg}">
-              <i data-lucide="${event.icon}" class="w-4 h-4 ${config.text}"></i>
-            </div>
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-              <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
-                <div class="flex items-center space-x-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-md text-sm w-fit">
-                  <i data-lucide="clock" class="w-4 h-4"></i>
-                  <span>${event.time}</span>
-                </div>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full border ${config.bg} ${config.text} ${config.border}">
-                  ${config.label}
-                </span>
-              </div>
-              <h3 class="text-xl font-bold text-slate-800 mt-3 mb-2">${event.title}</h3>
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center text-slate-500 font-medium">
-                  <i data-lucide="map-pin" class="w-4 h-4 mr-1.5 shrink-0"></i>
-                  <span class="text-sm truncate max-w-[150px] md:max-w-none">${event.place}</span>
-                </div>
-                ${mapButtonHtml}
-              </div>
-              <div class="bg-amber-50 rounded-xl p-4 border border-amber-100/50 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
-                <div class="flex gap-3">
-                  <div class="mt-0.5 text-amber-500 shrink-0">
-                    <i data-lucide="info" class="w-[18px] h-[18px]"></i>
-                  </div>
-                  <div class="text-sm">
-                    <p class="font-bold text-amber-800 mb-1 leading-tight">육아 꿀팁</p>
-                    <p class="text-amber-900 leading-snug break-keep">${event.tip}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      if (activeDay === 'cost') {
+        titleContainer.innerHTML = `
+          <h2 class="text-2xl font-bold text-slate-800 flex items-center">
+            <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-lg mr-3 text-lg">
+              Total
+            </span>
+            여행 예산 요약
+          </h2>
         `;
-      }).join('');
+        
+        contentContainer.className = "space-y-4";
+        let costHtml = `
+          <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-6 text-center">
+            <p class="text-slate-500 font-medium mb-2">총 지출 및 예상 예산</p>
+            <div class="text-4xl md:text-5xl font-extrabold text-emerald-600 tracking-tight">
+              ${costData.total.toLocaleString()}원
+            </div>
+            <p class="text-xs text-slate-400 mt-3 break-keep">* 숙박 및 아쿠아플라넷은 결제 완료 금액이며, 나머지는 예상 지출입니다.</p>
+          </div>
+          <div class="grid gap-3 md:gap-4">
+        `;
+
+        costHtml += costData.categories.map(cat => `
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+             <div class="h-14 w-14 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center shrink-0">
+               <i data-lucide="${cat.icon}" class="w-6 h-6"></i>
+             </div>
+             <div class="flex-1">
+               <div class="text-base font-bold text-slate-800">${cat.name}</div>
+               <div class="text-sm text-slate-500 mt-0.5">${cat.details}</div>
+             </div>
+             <div class="text-lg font-extrabold text-slate-800 shrink-0">
+               ${cat.amount.toLocaleString()}원
+             </div>
+          </div>
+        `).join('');
+
+        costHtml += `</div>`;
+        contentContainer.innerHTML = costHtml;
+      } else {
+        const dayData = tripData.find(d => d.day === activeDay);
+        titleContainer.innerHTML = `
+          <h2 class="text-2xl font-bold text-slate-800 flex items-center">
+            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg mr-3 text-lg">
+              Day ${dayData.day}
+            </span>
+            ${dayData.title}
+          </h2>
+        `;
+
+        contentContainer.className = "relative border-l-2 border-blue-100 ml-4 md:ml-6 space-y-8";
+        contentContainer.innerHTML = dayData.events.map(event => {
+          const config = typeConfigs[event.type] || typeConfigs.activity;
+          const mapButtonHtml = event.mapQuery ? `
+            <a href="https://map.naver.com/v5/search/${encodeURIComponent(event.mapQuery)}" target="_blank" rel="noopener noreferrer" class="ml-auto flex items-center shrink-0 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1.5 rounded-md hover:bg-emerald-100 transition-colors shadow-sm">
+              <i data-lucide="map" class="w-3.5 h-3.5 mr-1"></i>
+              지도
+            </a>
+          ` : '';
+
+          return `
+            <div class="relative pl-8 md:pl-10">
+              <div class="absolute -left-[17px] top-1 h-8 w-8 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${config.bg}">
+                <i data-lucide="${event.icon}" class="w-4 h-4 ${config.text}"></i>
+              </div>
+              <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+                  <div class="flex items-center space-x-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-md text-sm w-fit">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    <span>${event.time}</span>
+                  </div>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full border ${config.bg} ${config.text} ${config.border}">
+                    ${config.label}
+                  </span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mt-3 mb-2">${event.title}</h3>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center text-slate-500 font-medium text-sm">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-1.5 shrink-0"></i>
+                    <span>${event.place}</span>
+                  </div>
+                  ${mapButtonHtml}
+                </div>
+                <div class="bg-amber-50 rounded-xl p-4 border border-amber-100/50 relative overflow-hidden">
+                  <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+                  <div class="flex gap-3">
+                    <div class="mt-0.5 text-amber-500 shrink-0">
+                      <i data-lucide="info" class="w-[18px] h-[18px]"></i>
+                    </div>
+                    <div class="text-sm">
+                      <p class="font-bold text-amber-800 mb-1 leading-tight">육아 꿀팁</p>
+                      <p class="text-amber-900 leading-snug break-keep">${event.tip}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
 
-    // 하단 이동 버튼 렌더링
     function renderNavButtons() {
       const container = document.getElementById('nav-buttons-container');
+      if (activeDay === 'cost') {
+        container.innerHTML = `
+          <button onclick="setActiveDay(1)" class="w-full py-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50">
+            1일 차 일정으로 돌아가기
+          </button>
+        `;
+        return;
+      }
+
       const isFirst = activeDay === 1;
       const isLast = activeDay === tripData.length;
 
-      container.innerHTML = `
-        <button 
-          onclick="setActiveDay(${activeDay - 1})"
-          class="flex-1 flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 transition-colors hover:bg-slate-50 ${isFirst ? 'opacity-0 pointer-events-none' : ''}"
-        >
-          <i data-lucide="chevron-left" class="w-5 h-5"></i>
-          이전 날
-        </button>
-        <button 
-          onclick="setActiveDay(${activeDay + 1})"
-          class="flex-[2] flex items-center justify-center gap-2 py-4 bg-blue-600 rounded-2xl font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 ${isLast ? 'opacity-0 pointer-events-none' : ''}"
-        >
-          다음 날 일정 보기
-          <i data-lucide="chevron-right" class="w-5 h-5"></i>
-        </button>
-      `;
+      let html = '';
+      if (!isFirst) {
+        html += `
+          <button onclick="setActiveDay(${activeDay - 1})" class="w-full py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-500 text-sm">
+            이전 날 일정 보기
+          </button>
+        `;
+      }
+      
+      if (!isLast) {
+        html += `
+          <button onclick="setActiveDay(${activeDay + 1})" class="w-full py-4 bg-blue-600 rounded-2xl font-extrabold text-white shadow-lg text-lg">
+            다음 날 (${activeDay + 1}일 차) 일정 보기
+          </button>
+        `;
+      } else {
+        html += `
+          <button onclick="setActiveDay('cost')" class="w-full py-4 bg-emerald-600 rounded-2xl font-extrabold text-white shadow-lg text-lg">
+            최종 비용 확인하기
+          </button>
+        `;
+      }
+      container.innerHTML = html;
     }
 
     document.addEventListener('DOMContentLoaded', renderApp);
