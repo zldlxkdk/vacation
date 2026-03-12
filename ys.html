@@ -276,14 +276,39 @@
       }
     ];
 
-    // 비용 산정 데이터 (실제 예약 내역 반영)
+    // 비용 산정 데이터 (상세 항목 지원)
     const costData = {
-      total: 1294940, // 664,240 + 80,700 + 150,000(교통) + 350,000(식비) + 50,000(기타티켓)
+      total: 1348940, // 664,240(숙소) + 184,700(관광) + 350,000(식비) + 150,000(교통)
       categories: [
-        { name: "숙박비 (예약완료)", amount: 664240, details: "하이클래스153 풀빌라 3박 예약 완료", icon: "bed", color: "text-blue-600", bg: "bg-blue-50" },
-        { name: "관광/체험비", amount: 130700, details: "아쿠아플라넷(80,700원 결제) + 케이블카 등 예상", icon: "ticket", color: "text-green-600", bg: "bg-green-50" },
-        { name: "식비 및 간식 (예상)", amount: 350000, details: "게장, 횟집 포장, 카페, 배달 음식 등", icon: "utensils", color: "text-orange-600", bg: "bg-orange-50" },
-        { name: "교통비 (예상)", amount: 150000, details: "이천↔여수 왕복 주유비 및 톨게이트", icon: "car", color: "text-purple-600", bg: "bg-purple-50" }
+        { 
+          name: "숙박비", amount: 664240, details: "하이클래스153 풀빌라 3박 예약", icon: "bed", color: "text-blue-600", bg: "bg-blue-50",
+          subItems: [
+            { title: "하이클래스153 풀빌라 (3박)", price: 664240, note: "결제 완료" }
+          ]
+        },
+        { 
+          name: "관광/체험비", amount: 184700, details: "아쿠아플라넷, 케이블카, 예술랜드", icon: "ticket", color: "text-green-600", bg: "bg-green-50",
+          subItems: [
+            { title: "아쿠아플라넷 여수", price: 80700, note: "결제 완료" },
+            { title: "여수 해상케이블카", price: 64000, note: "확정 금액" },
+            { title: "여수 예술랜드", price: 40000, note: "예상" }
+          ]
+        },
+        { 
+          name: "식비/간식", amount: 350000, details: "게장, 횟집, 카페, 바비큐 등", icon: "utensils", color: "text-orange-600", bg: "bg-orange-50",
+          subItems: [
+            { title: "1일 차 (휴게소 식사, 회/간식 포장)", price: 80000, note: "예상" },
+            { title: "2일 차 (꽃돌게장, 대형카페, 바비큐)", price: 150000, note: "예상" },
+            { title: "3일 차 (로컬맛집, 배달음식)", price: 80000, note: "예상" },
+            { title: "4일 차 (기념품, 간식, 점심)", price: 40000, note: "예상" }
+          ]
+        },
+        { 
+          name: "교통비", amount: 150000, details: "이천↔여수 왕복 주유비/톨게이트", icon: "car", color: "text-purple-600", bg: "bg-purple-50",
+          subItems: [
+            { title: "왕복 주유비 및 톨게이트", price: 150000, note: "예상" }
+          ]
+        }
       ]
     };
 
@@ -357,18 +382,21 @@
           </h2>
         `;
         
-        contentContainer.className = "space-y-4";
+        contentContainer.className = "space-y-6";
+        
+        // 1. 총괄 요약 카드
         let costHtml = `
-          <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-6 text-center">
-            <p class="text-slate-500 font-medium mb-2">총 지출 및 예상 예산</p>
-            <div class="text-4xl md:text-5xl font-extrabold text-emerald-600 tracking-tight">
-              ${costData.total.toLocaleString()}원
+          <div>
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 mb-4 text-center">
+              <p class="text-slate-500 font-medium mb-2">총 지출 및 예상 예산</p>
+              <div class="text-4xl md:text-5xl font-extrabold text-emerald-600 tracking-tight">
+                ${costData.total.toLocaleString()}원
+              </div>
             </div>
-            <p class="text-xs text-slate-400 mt-3 break-keep">* 숙박 및 아쿠아플라넷은 결제 완료 금액이며, 나머지는 예상 지출입니다.</p>
-          </div>
-          <div class="grid gap-3 md:gap-4">
+            <div class="grid gap-3 md:gap-4">
         `;
 
+        // 카테고리별 요약
         costHtml += costData.categories.map(cat => `
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
              <div class="h-14 w-14 rounded-full ${cat.bg} ${cat.color} flex items-center justify-center shrink-0">
@@ -376,15 +404,64 @@
              </div>
              <div class="flex-1">
                <div class="text-base font-bold text-slate-800">${cat.name}</div>
-               <div class="text-sm text-slate-500 mt-0.5">${cat.details}</div>
+               <div class="text-sm text-slate-500 mt-0.5 truncate max-w-[180px] md:max-w-full">${cat.details}</div>
              </div>
              <div class="text-lg font-extrabold text-slate-800 shrink-0">
                ${cat.amount.toLocaleString()}원
              </div>
           </div>
         `).join('');
+        costHtml += `</div></div>`;
 
-        costHtml += `</div>`;
+        // 2. 항목별 상세 내역 표 (새로 추가된 부분)
+        costHtml += `
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-6">
+            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+              <i data-lucide="list-tree" class="w-5 h-5 text-slate-500"></i>
+              <h3 class="font-bold text-slate-800 text-lg">상세 비용 내역</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm text-slate-600 whitespace-nowrap">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500">
+                  <tr>
+                    <th class="px-5 py-3 font-medium">분류</th>
+                    <th class="px-5 py-3 font-medium">세부 항목</th>
+                    <th class="px-5 py-3 font-medium text-right">금액</th>
+                    <th class="px-5 py-3 font-medium text-center">비고</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+        `;
+
+        costData.categories.forEach(cat => {
+          cat.subItems.forEach((sub, index) => {
+            const isCompleted = sub.note.includes("완료") || sub.note.includes("확정");
+            const badgeClass = isCompleted 
+              ? "bg-emerald-100 text-emerald-700 font-bold" 
+              : "bg-slate-100 text-slate-600";
+            
+            costHtml += `
+              <tr class="hover:bg-slate-50 transition-colors">
+                ${index === 0 
+                  ? `<td class="px-5 py-4 align-top font-bold ${cat.color} border-r border-slate-100 bg-white" rowspan="${cat.subItems.length}">${cat.name.replace('비', '')}</td>` 
+                  : ''}
+                <td class="px-5 py-4 text-slate-700">${sub.title}</td>
+                <td class="px-5 py-4 text-right font-semibold text-slate-800">${sub.price.toLocaleString()}원</td>
+                <td class="px-5 py-4 text-center">
+                  <span class="text-[11px] px-2 py-1 rounded-md ${badgeClass}">${sub.note}</span>
+                </td>
+              </tr>
+            `;
+          });
+        });
+
+        costHtml += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
         contentContainer.innerHTML = costHtml;
       } else {
         const dayData = tripData.find(d => d.day === activeDay);
@@ -481,7 +558,7 @@
       } else {
         html += `
           <button onclick="setActiveDay('cost')" class="w-full py-4 bg-emerald-600 rounded-2xl font-extrabold text-white shadow-lg text-lg">
-            최종 비용 확인하기
+            최종 비용 상세 확인하기
           </button>
         `;
       }
